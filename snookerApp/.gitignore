@@ -1,0 +1,26 @@
+# תיקיית סביבת העבודה הווירטואלית (Python Virtual Environment)
+venv/
+
+# קבצים זמניים של Python
+__pycache__/
+*.pyc
+*.pyo
+
+# קבצים של VS Code
+.vscode/
+
+# קובצי ZIP
+*.zip
+
+# תיקיות שקשורות ל-build או תלויות
+node_modules/
+dist/
+build/
+
+# קובצי מערכת
+.DS_Store
+Thumbs.db
+
+
+#.env
+.env
