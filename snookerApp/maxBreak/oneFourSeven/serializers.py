@@ -1,14 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .models import Tournament
 from rest_framework import serializers
-from .models import Event, Ranking, Player
+from .models import Event, Ranking, Player, UpcomingMatch
 
-class TournamentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tournament
-        fields = "__all__"
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -46,3 +42,9 @@ class RankingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ranking
         fields = '__all__'
+
+class UpcomingMatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UpcomingMatch
+        fields = '__all__'
+

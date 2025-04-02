@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { getRanking, getPlayerDetails } from '../services/matchServices';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface RankingItem {
     ID: number;
@@ -16,56 +18,62 @@ export default function Ranking() {
     const [playerNames, setPlayerNames] = useState<{ [playerId: number]: string }>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         loadRankingData();
     }, []);
 
-    const loadRankingData = async () => {
+    const loadRankingData = useCallback(async () => {
         try {
             const data = await getRanking();
-            setRankingData(data);
-            await loadPlayerNames(data);
+            if (data && Array.isArray(data)) {
+                setRankingData(data);
+                await loadPlayerNames(data);
+            } else {
+                setError('No ranking data found.');
+                setLoading(false);
+            }
         } catch (error) {
             console.error('Failed to load ranking data:', error);
             setError('Failed to load ranking data');
-        } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
-    const loadPlayerNames = async (rankingData: RankingItem[]) => {
+    const loadPlayerNames = useCallback(async (rankingData: RankingItem[]) => {
         try {
             const names: { [playerId: number]: string } = {};
             const playerIds = rankingData.map((item) => item.PlayerID);
-    
-            for (const playerId of playerIds) {
+
+            const playerDetailsPromises = playerIds.map(async (playerId) => {
                 try {
                     const playerData = await getPlayerDetails(playerId);
-                    if (Array.isArray(playerData) && playerData.length > 0) {
-                        names[playerId] = `${playerData[0]?.FirstName || ''} ${playerData[0]?.MiddleName || ''} ${playerData[0]?.LastName || ''}`.trim();
-                    } else {
-                        console.error(`Invalid player data for ID ${playerId}:`, playerData);
-                        names[playerId] = 'Unknown Player';
-                    }
+                    return {
+                        playerId,
+                        name: playerData
+                            ? `${playerData?.FirstName || ''} ${playerData?.MiddleName || ''} ${playerData?.LastName || ''}`.trim()
+                            : 'Unknown Player',
+                    };
                 } catch (error: any) {
-                    if (error.response && error.response.status === 500) {
-                        console.error(`Error 500 fetching player details for ID ${playerId}:`, error);
-                        names[playerId] = 'Unknown Player';
-                    } else {
-                        throw error;
-                    }
+                    console.error(`Failed to load player details for ID ${playerId}:`, error);
+                    return { playerId, name: 'Unknown Player' };
                 }
-                await delay(500); // הוספת השהייה של 500 מילישניות
-            }
+            });
+
+            const results = await Promise.all(playerDetailsPromises);
+            results.forEach(result => {
+                names[result.playerId] = result.name;
+            });
+
             setPlayerNames(names);
         } catch (error) {
             console.error('Failed to load player names:', error);
             setError('Failed to load player names');
+        } finally {
+            setLoading(false);
         }
-    };
+    }, []);
 
     if (loading) {
         return (
@@ -78,27 +86,45 @@ export default function Ranking() {
     if (error) {
         return (
             <View style={styles.container}>
-                <Text style={styles.loadingText}>Error: {error}</Text>
+                <Text style={styles.errorText}>Error: {error}</Text>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>Ranking</Text>
             <FlatList
                 data={rankingData}
                 keyExtractor={(item) => item.ID.toString()}
                 renderItem={({ item }) => (
-                    <View style={styles.matchItem}>
-                        <Text style={styles.playerName}>
-                            {item.Position}. {playerNames[item.PlayerID] || 'Unknown Player'}, earn this year: ${item.Sum}
-                        </Text>
-                    </View>
+                    <RankingItemComponent item={item} playerNames={playerNames} router={router} />
                 )}
             />
-        </View>
+        </SafeAreaView>
     );
 }
+
+const RankingItemComponent = React.memo(({ item, playerNames, router }: { item: RankingItem; playerNames: { [playerId: number]: string }; router: any }) => {
+    const playerName = playerNames[item.PlayerID] || 'Unknown Player';
+    
+
+    return (
+        <SafeAreaView>
+            <TouchableOpacity onPress={() => router.push(`/player/${item.PlayerID}`)}>
+                <View style={styles.rankingItem}>
+                        <Text style={styles.position}>{item.Position}.</Text>
+                        <Text style={styles.playerName}>{playerName}</Text>
+                    <View style={styles.totalContainer}>
+                        <Text style={styles.totalLabel}>Total</Text>
+                        <Text style={styles.totalValue}>${item.Sum}</Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        </SafeAreaView>
+
+    );
+});
 
 const styles = StyleSheet.create({
     container: {
@@ -106,29 +132,60 @@ const styles = StyleSheet.create({
         padding: 16,
         backgroundColor: 'transparent',
     },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 16,
+        textAlign: 'center',
+        color: 'white',
+    },
     loadingText: {
         textAlign: 'center',
         fontSize: 18,
         color: '#fff',
         marginTop: 20,
     },
-    matchItem: {
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        padding: 15,
-        marginVertical: 8,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 3,
+    errorText: {
+        textAlign: 'center',
+        fontSize: 18,
+        color: 'red',
+        marginTop: 20,
+    },
+    rankingItem: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderBottomWidth: 1,
+        borderColor: '#eee',
+        justifyContent: 'space-between',
+    },
+    position: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginRight: 10,
+        width: 30,
+        textAlign: 'left',
+        color: 'white',
     },
     playerName: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
+        color: 'white',
         flex: 1,
+        marginRight: 10,
+    },
+    totalContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    totalLabel: {
+        fontSize: 14,
+        color: 'white',
+        marginRight: 5,
+    },
+    totalValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
     },
 });

@@ -1,8 +1,9 @@
-import api from './api';
+import axios from "axios";
+import { api, apiDataBase,snookerArg } from "./api";
 
 export const getSeasonEvents = async () => {
     try {
-        const response = await api.get('events/');
+        const response = await apiDataBase.get('events/');
         return response.data;
     } catch (error) {
         console.error("Error fetching season events:", error);
@@ -10,34 +11,77 @@ export const getSeasonEvents = async () => {
     }
 };
 
-export const getPlayersM = async () => {
+export const getPlayerFromInternalAPI = async (player_id) => {
     try {
-        const response = await api.get('players/men/');
+        const response = await api.get(`player_by_id/${player_id}/`);
         return response.data;
     } catch (error) {
-        console.error("Error fetching men players:", error);
-        throw error;
+        if (error.response && error.response.status === 404) {
+        } else {
+            console.error(`Error fetching player ${player_id} from internal API:`, error.message);
+        }
+        return null;
     }
 };
 
-export const getPlayersW = async () => {
-    try {
-        const response = await api.get('players/women/');
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching women players:", error);
-        throw error;
+const externalAPIRequestQueue = [];
+let processingQueue = false;
+const MAX_REQUESTS_PER_MINUTE = 10;
+const REQUEST_INTERVAL = 60000 / MAX_REQUESTS_PER_MINUTE; 
+
+export const getPlayerFromExternalAPI = async (player_id) => {
+    return new Promise((resolve) => {
+        externalAPIRequestQueue.push({
+            player_id,
+            resolve
+        });
+        
+        if (!processingQueue) {
+            processExternalAPIQueue();
+        }
+    });
+};
+
+const processExternalAPIQueue = async () => {
+    processingQueue = true;
+    
+    while (externalAPIRequestQueue.length > 0) {
+        const request = externalAPIRequestQueue.shift();
+        
+        try {
+            const url = `https://api.snooker.org/?p=${request.player_id}`;            
+            const snookerResponse = await axios.get(url, {
+                headers: {
+                    'X-Requested-By': 'FahimaApp128',
+                },
+            });
+            
+            request.resolve(snookerResponse.data);
+        } catch (error) {
+            console.error(`Error fetching from external API for player ${request.player_id}:`, error.message);
+            if (error.response) {
+                console.error(`External API returned status: ${error.response.status}`);
+            }
+            request.resolve(null); // פתרון הבטחה עם null במקרה של שגיאה
+        }
+        
+        // המתנה בין בקשות כדי לא לעבור את המגבלה
+        if (externalAPIRequestQueue.length > 0) {
+            await new Promise(resolve => setTimeout(resolve, REQUEST_INTERVAL));
+        }
     }
+    
+    processingQueue = false;
 };
 
 export const getPlayerDetails = async (player_id) => {
-    try {
-        const response = await api.get(`players/${player_id}/`);
-        return response.data;
-    } catch (error) {
-        console.error(`Error fetching player details for ID ${player_id}:`, error);
-        throw error;
+    const internalData = await getPlayerFromInternalAPI(player_id);
+    
+    if (internalData) {
+        return internalData;
     }
+    
+    return await getPlayerFromExternalAPI(player_id);
 };
 
 export const getRanking = async () => {
@@ -50,10 +94,29 @@ export const getRanking = async () => {
     }
 };
 
-export const getUpcomingMatches = async () => {
+// export const getUpcomingMatches = async () => {
+//     try {
+//         const response = await api.get('matches/upcoming/');
+//         return response.data;
+//     } catch (error) {
+//         console.error("Error fetching upcoming matches:", error);
+//         throw error;
+//     }
+// };
+
+export const getUpcomingMatches = async (page = 1) => {
     try {
-        const response = await api.get('matches/upcoming/');
-        return response.data;
+        const response = await api.get(`matches/upcoming/?page=${page}`);
+        const matches = response.data;
+
+        // סדר את המשחקים לפי ScheduledDate
+        matches.sort((a, b) => {
+            const dateA = new Date(a.ScheduledDate);
+            const dateB = new Date(b.ScheduledDate);
+            return dateA - dateB;
+        });
+
+        return matches;
     } catch (error) {
         console.error("Error fetching upcoming matches:", error);
         throw error;

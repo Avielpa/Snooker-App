@@ -1,10 +1,10 @@
 
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { getUpcomingMatches, getTourDetails, getPlayerDetails } from '../services/matchServices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Match {
     ID: number;
@@ -53,7 +53,7 @@ const MatchItem = React.memo(({ item, tourNames, playerNames, navigation, isLogg
             onPress={() => isLoggedIn && handleMatchPress(item.ID)}
             activeOpacity={isLoggedIn ? 0.7 : 1}
         >
-            <View style={styles.playerRow}>
+            <SafeAreaView style={styles.playerRow}>
                 <Text style={[styles.playerName, { textAlign: 'left' }]} onPress={() => isLoggedIn && handlePlayerPress(item.Player1ID)}>
                     {player1Name}
                 </Text>
@@ -61,11 +61,11 @@ const MatchItem = React.memo(({ item, tourNames, playerNames, navigation, isLogg
                 <Text style={[styles.playerName, { textAlign: 'right' }]} onPress={() => isLoggedIn && handlePlayerPress(item.Player2ID)}>
                     {player2Name}
                 </Text>
-            </View>
-            <View style={styles.detailsRow}>
+            </SafeAreaView>
+            <SafeAreaView style={styles.detailsRow}>
                 <Text style={styles.scheduledDate}>{scheduledDate}</Text>
                 <Text style={styles.eventDetails}>{tourName}</Text>
-            </View>
+            </SafeAreaView>
             {item.Note && <Text style={styles.note}>{item.Note}</Text>}
         </TouchableOpacity>
     );
@@ -79,7 +79,6 @@ export default function index() {
     const [error, setError] = useState<string | null>(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigation = useRouter();
-    
 
     useEffect(() => {
         const checkLogin = async () => {
@@ -141,7 +140,10 @@ export default function index() {
         await Promise.all(playerIds.map(async (playerId) => {
             try {
                 const playerDetails = await getPlayerDetails(playerId);
-                playerNamesMap[playerId] = `${playerDetails[0]?.FirstName || ''} ${playerDetails[0]?.MiddleName || ''} ${playerDetails[0]?.LastName || ''}`.trim();
+                const playerName = playerDetails // Assuming playerDetails is the player object directly
+                    ? `${playerDetails?.FirstName || ''} ${playerDetails?.MiddleName || ''} ${playerDetails?.LastName || ''}`.trim()
+                    : 'Unknown Player';
+                playerNamesMap[playerId] = playerName;
             } catch (err) {
                 console.error(`Error loading player name for ${playerId}:`, err);
                 playerNamesMap[playerId] = 'Unknown Player';
@@ -151,38 +153,34 @@ export default function index() {
         return playerNamesMap;
     }, []);
 
-    if (loading) {
-        return (
-            <View style={styles.container}>
-                <Text style={styles.loadingText}>Loading matches...</Text>
-            </View>
-        );
-    }
-
     if (error) {
         return (
-            <View style={styles.container}>
+            <SafeAreaView style={styles.container}>
                 <Text style={styles.loadingText}>Error: {error}</Text>
-            </View>
+            </SafeAreaView>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <FlatList
-                data={matchesData}
-                keyExtractor={(item) => item.ID.toString()}
-                renderItem={({ item }) => (
-                    <MatchItem
-                        item={item}
-                        tourNames={tourNames}
-                        playerNames={playerNames}
-                        navigation={navigation}
-                        isLoggedIn={isLoggedIn}
-                    />
-                )}
-            />
-        </View>
+        <SafeAreaView style={styles.container}>
+            {loading ? (
+                <Text style={styles.loadingText}>Loading matches...</Text>
+            ) : (
+                <FlatList
+                    data={matchesData}
+                    keyExtractor={(item) => item.ID.toString()}
+                    renderItem={({ item }) => (
+                        <MatchItem
+                            item={item}
+                            tourNames={tourNames}
+                            playerNames={playerNames}
+                            navigation={navigation}
+                            isLoggedIn={isLoggedIn}
+                        />
+                    )}
+                />
+            )}
+        </SafeAreaView>
     );
 }
 
