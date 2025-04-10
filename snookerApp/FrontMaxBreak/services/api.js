@@ -5,7 +5,7 @@ const api = axios.create({
     timeout: 5000,
     headers: {
         'Content-Type': 'application/json',
-        'X-Requested-By': 'FahimaApp128', // הוספתי את טוקן האימות ככותרת 'X-Requested-By'
+        'X-Requested-By': 'FahimaApp128', 
     },
 });
 

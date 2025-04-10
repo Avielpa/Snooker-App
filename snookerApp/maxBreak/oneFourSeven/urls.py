@@ -9,6 +9,7 @@ from .views import (
     EventList,
     PlayerList,
     RankingList,
+    matches_of_an_event_view,
     player_by_id_view,
     upcoming_matches_view,
     tour_details_view
@@ -28,5 +29,6 @@ urlpatterns = [
     path('players/<str:sex>/', PlayerList.as_view(), name='players'),
     path('ranking/', RankingList.as_view(), name='ranking'),
     path('matches/upcoming/', upcoming_matches_view, name='upcoming_matches'),
+    path('curr_tour_matches/upcoming/', matches_of_an_event_view, name='curr_ev_matches'),
     path('tours/<int:event_id>/', tour_details_view, name='tour_details'),
 ]

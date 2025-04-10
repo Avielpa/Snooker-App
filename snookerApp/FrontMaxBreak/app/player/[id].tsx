@@ -92,54 +92,57 @@ export default function PlayerDetails() {
     
     const styles = StyleSheet.create({
         container: {
-            flex: 1,
-            padding: 16,
-            backgroundColor: 'transparent',
+          flex: 1,
+          padding: 20,
+          backgroundColor: '#0f172a', // Tailwind slate-900
         },
-        headerContainer: { // סגנון חדש עבור ה- View שמכיל את החץ ואת השם
-            flexDirection: 'row', // הגדרת כיוון השורה
-            alignItems: 'center', // יישור אנכי של האלמנטים במרכז
-            marginBottom: 16, // הוספת מרווח מתחת לשורה
+        headerContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 20,
         },
         title: {
-            fontSize: 24,
-            fontWeight: 'bold',
-            marginLeft: 40, 
-            color: 'white', 
-            textAlign:'center'
-        },
-        detailItem: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            paddingVertical: 10,
-            borderBottomWidth: 1,
-            borderColor: '#ccc',
-        },
-        label: {
-            fontSize: 16,
-            fontWeight: 'bold',
-            color: 'white',
-        },
-        value: {
-            fontSize: 16,
-            color: 'white',
-        },
-        loadingText: {
-            textAlign: 'center',
-            fontSize: 18,
-            color: '#fff',
-            marginTop: 20,
-        },
-        errorText: {
-            textAlign: 'center',
-            fontSize: 18,
-            color: 'red',
-            marginTop: 20,
+          fontSize: 26,
+          fontFamily: 'PoppinsBold',
+          color: '#f1f5f9',
+          textAlign: 'center',
+          flex: 1,
         },
         backButton: {
-            position: 'relative', // שינוי ל-relative כדי שה-title יתמקם נכון
-            top: 0,
-            left: 0,
-            zIndex: 10,
+          position: 'absolute',
+          left: 0,
+          zIndex: 10,
         },
-    });
+        detailItem: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingVertical: 14,
+          borderBottomWidth: 1,
+          borderColor: '#334155',
+        },
+        label: {
+          fontSize: 16,
+          fontFamily: 'PoppinsSemiBold',
+          color: '#cbd5e1',
+        },
+        value: {
+          fontSize: 16,
+          fontFamily: 'PoppinsRegular',
+          color: '#f8fafc',
+        },
+        loadingText: {
+          textAlign: 'center',
+          fontSize: 18,
+          fontFamily: 'PoppinsRegular',
+          color: '#fff',
+          marginTop: 20,
+        },
+        errorText: {
+          textAlign: 'center',
+          fontSize: 18,
+          fontFamily: 'PoppinsRegular',
+          color: 'red',
+          marginTop: 20,
+        },
+      });
+      

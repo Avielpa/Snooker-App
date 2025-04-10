@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Player,Event,Ranking,UpcomingMatch
+from .models import MatchesOfAnEvent, Player,Event,Ranking,UpcomingMatch
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
@@ -17,3 +17,4 @@ class EventsAdmin(admin.ModelAdmin):
 admin.site.register(UpcomingMatch)
 
 admin.site.register(Ranking)
+admin.site.register(MatchesOfAnEvent)

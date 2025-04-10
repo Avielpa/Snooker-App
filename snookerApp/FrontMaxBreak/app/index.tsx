@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { getUpcomingMatches, getTourDetails, getPlayerDetails } from '../services/matchServices';
+import { getUpcomingMatches, getTourDetails, getPlayerDetails, getCurrentTour } from '../services/matchServices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -80,6 +80,8 @@ export default function index() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigation = useRouter();
 
+
+
     useEffect(() => {
         const checkLogin = async () => {
             const token = await AsyncStorage.getItem('userToken');
@@ -89,7 +91,7 @@ export default function index() {
         checkLogin();
         const fetchData = async () => {
             try {
-                const matches = await getUpcomingMatches();
+                const matches = await getCurrentTour();
                 setMatchesData(matches);
                 await loadTourAndPlayerNames(matches);
             } catch (err) {
@@ -102,6 +104,11 @@ export default function index() {
 
         fetchData();
     }, []);
+
+    const curr = getCurrentTour();
+    console.log(curr);
+
+
 
     const loadTourAndPlayerNames = useCallback(async (matches: Match[]) => {
         const eventIds = [...new Set(matches.map(match => match.EventID))];
@@ -184,68 +191,78 @@ export default function index() {
     );
 }
 
+
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        padding: 16,
-        backgroundColor: 'transparent',
+      flex: 1,
+      padding: 16,
+      backgroundColor: 'transparent',
     },
     loadingText: {
-        textAlign: 'center',
-        fontSize: 18,
-        color: '#fff',
-        marginTop: 20,
+      textAlign: 'center',
+      fontSize: 18,
+      color: '#fff',
+      fontFamily: 'PoppinsRegular',
+      marginTop: 20,
     },
     matchItem: {
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        padding: 15,
-        marginVertical: 8,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 3,
-        alignItems: 'center',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: 18,
+      marginVertical: 10,
+      borderRadius: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      elevation: 5,
+      alignItems: 'center',
     },
     playerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginBottom: 6,
     },
     detailsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-        marginTop: 5,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginTop: 6,
     },
     playerName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 5,
-        flex: 1,
+      fontSize: 16,
+      fontFamily: 'PoppinsSemiBold',
+      color: '#0B5D2F',
+      flex: 1,
+      textAlign: 'left',
     },
     score: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 5,
-        textAlign: 'center',
-        minWidth: 40,
+      fontSize: 16,
+      fontFamily: 'PoppinsBold',
+      color: '#D6A346',
+      textAlign: 'center',
+      minWidth: 48,
     },
     eventDetails: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'right',
+      fontSize: 14,
+      fontFamily: 'PoppinsRegular',
+      color: '#555',
+      textAlign: 'right',
+      flex: 1,
     },
     scheduledDate: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'left',
+      fontSize: 14,
+      fontFamily: 'PoppinsRegular',
+      color: '#555',
+      textAlign: 'left',
+      flex: 1,
     },
     note: {
-        fontSize: 12,
-        color: '#666',
-        textAlign: 'center',
+      fontSize: 12,
+      fontFamily: 'PoppinsRegular',
+      color: '#999',
+      textAlign: 'center',
+      marginTop: 6,
     },
-});
+  });
+  

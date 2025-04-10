@@ -95,7 +95,25 @@ class UpcomingMatch(models.Model):
     OnBreak = models.BooleanField(blank=True,null=True)
     LiveUrl = models.URLField(null=True, blank=True)
     DetailsUrl = models.URLField(null=True, blank=True)
-    # הוסף כאן שדות נוספים מנתוני ה-JSON במידת הצורך
+
+    def __str__(self):
+        return f"Match {self.ID}"
+    
+
+class MatchesOfAnEvent(models.Model):
+    ID = models.IntegerField(primary_key=True)
+    EventID = models.IntegerField(null=True, blank=True)
+    Round = models.IntegerField(null=True, blank=True)
+    Number = models.IntegerField(null=True, blank=True)
+    Player1ID = models.IntegerField(null=True, blank=True)
+    Score1 = models.IntegerField(null=True, blank=True)
+    Player2ID = models.IntegerField(null=True, blank=True)
+    Score2 = models.IntegerField(null=True, blank=True)
+    ScheduledDate = models.DateTimeField(null=True, blank=True)
+    FrameScores = models.CharField(max_length=1000,null=True,blank=True)
+    OnBreak = models.BooleanField(blank=True,null=True)
+    LiveUrl = models.URLField(null=True, blank=True)
+    DetailsUrl = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return f"Match {self.ID}"

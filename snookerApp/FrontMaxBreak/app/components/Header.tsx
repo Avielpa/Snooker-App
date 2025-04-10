@@ -76,49 +76,59 @@ const Header = ({ onMenuPress } : any) => {
   );
 };
 
+
+
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#0B5D2F',
-    width: '100%', // or use Dimensions.get('window').width if needed
+    backgroundColor: 'rgba(11, 93, 47, 0.95)',
+    width: '100%',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.2)',
+    borderBottomColor: 'rgba(255,255,255,0.15)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 4,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   menuButton: {
-    padding: 8,
+    padding: 10,
   },
   title: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: 'System',
+    letterSpacing: 0.5,
   },
   loginButton: {
     backgroundColor: '#D6A346',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
   signupButton: {
     backgroundColor: '#D6A346',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-    marginLeft: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginLeft: 6,
   },
   loginButtonText: {
-    color: 'white',
-    fontWeight: "600",
-    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 13,
+    fontFamily: 'System',
   },
   authButtonsContainer: {
     flexDirection: 'row',
-  }
-})
+  },
+});
 
 export default Header;

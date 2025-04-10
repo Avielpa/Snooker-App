@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ImageBackground, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, View } from 'react-native';
 import './globals.css';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import BottomBar from './components/BottomBar';
 export default function RootLayout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+
     
     useEffect(() => {
         const checkLoginStatus = async () => {
@@ -19,7 +21,6 @@ export default function RootLayout() {
         };
         
         checkLoginStatus();
-        // האזנה לשינויים במצב ההתחברות
         const interval = setInterval(checkLoginStatus, 1000);
         return () => clearInterval(interval);
     }, []);
@@ -50,3 +51,5 @@ export default function RootLayout() {
         </SafeAreaProvider>
     );
 }
+
+

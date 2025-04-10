@@ -5,10 +5,12 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from django.core.paginator import Paginator
+from datetime import datetime
+    
 
 
-from .models import Player, Ranking, Event, UpcomingMatch
-from .serializers import EventSerializer, PlayerSerializer, RankingSerializer, UpcomingMatchSerializer, UserSerializer
+from .models import MatchesOfAnEvent, Player, Ranking, Event, UpcomingMatch
+from .serializers import EventSerializer, MatchesOfAnEventSerializer, PlayerSerializer, RankingSerializer, UpcomingMatchSerializer, UserSerializer
 
 from .scraper import (
     get_tour_details,
@@ -25,6 +27,11 @@ class UpcomingMatchList(generics.ListAPIView):
     serializer_class = UpcomingMatchSerializer
 
 @permission_classes([AllowAny])
+class matches_of_an_event(generics.ListAPIView):
+    queryset = MatchesOfAnEvent.objects.all()
+    serializer_class = MatchesOfAnEventSerializer
+
+@permission_classes([AllowAny])
 class PlayerList(generics.ListAPIView):
     serializer_class = PlayerSerializer
     def get_queryset(self):
@@ -36,21 +43,25 @@ class RankingList(generics.ListAPIView):
     queryset = Ranking.objects.all()
     serializer_class = RankingSerializer
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def season_events_view(request):
-    """API endpoint for season events."""
-    events = Event.objects.all()
-    serializer = EventSerializer(events, many=True)
-    return Response(serializer.data)
+    """API endpoint for season events with active, past flag and chronological order."""
+    events = Event.objects.all().order_by('StartDate') # order by start date
+    today = datetime.date.today()
+    serialized_events = []
+    for event in events:
+        serializer = EventSerializer(event)
+        event_data = serializer.data
+        start_date = event.StartDate
+        end_date = event.EndDate
+        event_data['active'] = start_date <= today <= end_date if start_date and end_date else False
+        event_data['past'] = end_date < today if end_date else False
+        serialized_events.append(event_data)
+    return Response(serialized_events)
 
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def upcoming_matches_view(request):
-#     """API endpoint for upcoming matches."""
-#     matches = UpcomingMatch.objects.all()
-#     serializer = UpcomingMatchSerializer(matches, many=True)
-#     return Response(serializer.data)
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -61,6 +72,19 @@ def upcoming_matches_view(request):
     page = request.GET.get('page')
     matches_page = paginator.get_page(page)
     serializer = UpcomingMatchSerializer(matches_page, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def matches_of_an_event_view(request):
+    """
+    API endpoint for upcoming matches, sorted by ScheduledDate, limited to 20.
+    """
+    matches = MatchesOfAnEvent.objects.all().order_by('ScheduledDate')  # מיון לפי ScheduledDate
+    paginator = Paginator(matches, 20)  
+    page = request.GET.get('page')
+    matches_page = paginator.get_page(page)
+    serializer = MatchesOfAnEventSerializer(matches_page, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework import serializers
-from .models import Event, Ranking, Player, UpcomingMatch
+from .models import Event, MatchesOfAnEvent, Ranking, Player, UpcomingMatch
 
 
 
@@ -28,6 +28,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
+    active = serializers.BooleanField(read_only=True)  # Add active field
+    past = serializers.BooleanField(read_only=True)    # Add past field
+
     class Meta:
         model = Event
         fields = '__all__'
@@ -46,5 +49,10 @@ class RankingSerializer(serializers.ModelSerializer):
 class UpcomingMatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = UpcomingMatch
+        fields = '__all__'
+
+class MatchesOfAnEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatchesOfAnEvent
         fields = '__all__'
 

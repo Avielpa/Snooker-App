@@ -1,7 +1,7 @@
 from datetime import datetime
 import requests
-from .models import Event, Player, Ranking, UpcomingMatch
-from .serializers import EventSerializer, RankingSerializer, UpcomingMatchSerializer
+from .models import Event, Player, Ranking, UpcomingMatch, MatchesOfAnEvent
+from .serializers import EventSerializer, MatchesOfAnEventSerializer, RankingSerializer, UpcomingMatchSerializer
 
 API_BASE_URL = "https://api.snooker.org/"
 HEADERS = {"X-Requested-By": "FahimaApp128"}
@@ -42,6 +42,15 @@ def save_upcoming_events(events_data):
                 defaults=serializer.validated_data
             )
 
+def save_matches_of_an_event(events_data):
+    for event_data in events_data:
+        serializer = UpcomingMatchSerializer(data=event_data)
+        if serializer.is_valid():
+            Event.objects.update_or_create(
+                ID=event_data.get('ID'),
+                defaults=serializer.validated_data
+            )
+
 def save_players(players_data):
     fields = [f.name for f in Player._meta.get_fields()]
     for player_data in players_data:
@@ -71,6 +80,8 @@ def save_rankings(rankings_data):
                 defaults=serializer.validated_data
             )
 
+
+
 def get_season_events():
     current_season = get_current_season()
     if current_season is None:
@@ -84,7 +95,8 @@ def get_season_events():
             and 'Championship League Stage' not in event['Name']
         ]
         save_events(filtered_events_data)
-        return Event.objects.filter(Season=current_season)
+        # Sort events by start date
+        return Event.objects.filter(Season=current_season).order_by('StartDate')
     return None
 
 def get_players_m():
@@ -136,18 +148,68 @@ def get_player_by_id(player_id):
     return fetch_from_api(url)
 
 def get_upcoming_matches():
-    """Fetches upcoming matches (t=14) for the main tour and saves them to the database in the order from the API."""
+    """Fetches upcoming matches (t=14) for the main tour and replaces the existing table with new data from the API."""
     url = f"{API_BASE_URL}?t=14&tr=main"
     matches_data = fetch_from_api(url)
     if matches_data:
-        # Save matches in the order they appear in the API response
+        # Delete all existing records
+        UpcomingMatch.objects.all().delete()
+        print("Existing matches deleted.")
+
+        # Insert new records from API
         for match_data in matches_data:
             serializer = UpcomingMatchSerializer(data=match_data)
             if serializer.is_valid():
                 serializer.save()
+                print(f"Match {match_data.get('ID')} created.")
+            else:
+                print(f"Invalid data for match {match_data.get('ID')}: {serializer.errors}")
         return UpcomingMatch.objects.all()
-    return None
+    else:
+        print("No matches data fetched from API.")
+        return None
+    
 
+def get_current_event():
+    """
+    מחזירה את ה-ID של הטורניר הפעיל, או None אם לא נמצא טורניר פעיל.
+    """
+    now = datetime.now()  # קבלת התאריך והשעה הנוכחיים
+
+    try:
+        # שאילתת דאטה בייס לקבלת טורניר פעיל
+        active_event = Event.objects.filter(
+            StartDate__lte=now,
+            EndDate__gte=now
+        ).first()
+
+        if active_event:
+            return active_event.ID  # החזרת ה-ID של הטורניר הפעיל
+        else:
+            return None  # החזרת None אם לא נמצא טורניר פעיל
+
+    except Event.DoesNotExist:
+        return None  # החזרת None אם לא נמצא טורניר פעיל
+    
+
+def matches_of_an_event():
+    event_id = get_current_event()
+    """fetch matches of an event"""
+    url = f"https://api.snooker.org/?t=6&e={event_id}"
+    matches = fetch_from_api(url)
+    if matches:
+        MatchesOfAnEvent.objects.all().delete()
+        for match in matches:
+            serializer = MatchesOfAnEventSerializer(data= match)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                print("Invalid serializer")
+        return MatchesOfAnEvent.objects.all()
+    else:
+        print("No matches")
+        return None
+    
 def get_tour_details(event_id):
     """Fetches tour details by event ID (t=3)."""
     url = f"{API_BASE_URL}?e={event_id}"
